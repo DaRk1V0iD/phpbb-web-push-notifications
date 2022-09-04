@@ -1,9 +1,8 @@
-<!-- IF S_REGISTERED_USER and not S_IS_BOT and (S_PUSH_DROPDOWN_INTEGRATION or S_IN_UCP and MODE == 'notification_options') -->
+{% if S_REGISTERED_USER and not S_IS_BOT and (S_PUSH_DROPDOWN_INTEGRATION or S_IN_UCP and MODE == 'notification_options') %}
 <script type="text/javascript">
-//<![CDATA[
 	var pushNotifications = {
-		dropdownIntegration: '{S_PUSH_DROPDOWN_INTEGRATION}',
-		introConfirmation: '{S_PUSH_INTRO_CONFIRMATION}',
+		dropdownIntegration: {% if S_PUSH_DROPDOWN_INTEGRATION %}true{% else %}false{% endif %},
+		introConfirmation: {% if S_PUSH_INTRO_CONFIRMATION %}true{% else %}false{% endif %},
 		language: {
 			ACTIONS: {
 				ENABLED: '{LA_BROWSER_NOTIFICATIONS_ACTION_ENABLED}',
@@ -23,15 +22,14 @@
 			UPDATE_FAILED: '{LA_BROWSER_NOTIFICATIONS_UPDATE_FAILED}'
 		},
 		notificationsPath: '{ROOT_PATH}notifications/browser/',
-		notificationsPage: <!-- IF S_IN_UCP and MODE == 'notification_options' -->true<!-- ELSE -->false<!-- ENDIF -->,
+		notificationsPage: {% if S_IN_UCP and MODE == 'notification_options' %}true{% else %}false{% endif %},
 		serviceWorkerPath: '{ROOT_PATH}ext/lavigor/notifications/styles/all/template/js/sw.js',
 		serverAPIkey: '{PUSH_API_PUBLIC_KEY}'
 	};
-//]]>
 </script>
-<!-- INCLUDECSS @lavigor_notifications/notifications.css -->
-<!-- INCLUDEJS @lavigor_notifications/js/notifications.js -->
-<!-- IF S_IN_UCP and MODE == 'notification_options' -->
+{% INCLUDECSS '@lavigor_notifications/notifications.css' %}
+{% INCLUDEJS '@lavigor_notifications/js/notifications.js' %}
+{% if S_IN_UCP and MODE == 'notification_options' %}
 <style>
 	.nojs form#ucp table thead:before {
 		content: '{L_BROWSER_NOTIFICATIONS_UNSUPPORTED}';
@@ -41,5 +39,5 @@
 		font-weight: bold;
 	}
 </style>
-<!-- ENDIF -->
-<!-- ENDIF -->
+{% endif %}
+{% endif %}
