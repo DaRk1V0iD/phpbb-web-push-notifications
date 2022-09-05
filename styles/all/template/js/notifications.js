@@ -71,27 +71,44 @@
 		}
 	}
 
-	function updateSubscriptionOnServer(subscription, unsubscribe) {
+	function updateSubscriptionOnServer(subscription, subFlg = 'sub') {
+		let subPath = 'subscribe';
+		switch (subFlg) {
+			case 'unsub':
+				subPath = 'unsubscribe';
+			break;
+			case 'unsuball':
+				subPath = 'unsubscribe_all';
+			break;
+		}
 		$.ajax({
-			url: pushNotifications.notificationsPath + (unsubscribe ? 'unsubscribe' : 'subscribe'),
+			url: pushNotifications.notificationsPath + subPath,
 			data: JSON.parse(JSON.stringify(subscription)),
 			method: 'POST',
 			error: function() {
-				if (!unsubscribe) { // Unsubscribe in case of an error during subscription.
+				if (subFlg != 'unsub') { // Unsubscribe in case of an error during subscription.
 					unsubscribeUser();
 					phpbb.alert(pushNotifications.language.INFORMATION, pushNotifications.language.UPDATE_FAILED);
 				}
 				// Do not show an error for failed unsubscription - it will be handled on the server side.
 			},
 			success: function(res) {
-				if (!res.id && !unsubscribe) { // Unsubscribe in case of an error during subscription.
+				if (!res.id && subFlg != 'unsub') { // Unsubscribe in case of an error during subscription.
 					unsubscribeUser();
-					phpbb.alert(
-						pushNotifications.language.INFORMATION,
-						(res.error) ? res.error : pushNotifications.language.UPDATE_FAILED
-					);
+					if (res.error) {
+						phpbb.alert(pushNotifications.language.INFORMATION, res.error);
+					} else if (res.error_max_limit) {
+						var errorMaxLimitContent = '<form action="{S_CONFIRM_ACTION}" method="post"><h2 style="text-align: center;">' + res.error_max_limit + '</h2><fieldset class="submit-buttons" style="padding-top: 15px; font-size: 1.3em;"><input type="button" name="confirm" value="' + pushNotifications.language.INTRO_YES + '" class="button2" style="margin-right: 25px;" />&nbsp;<input type="button" name="cancel" value="' + pushNotifications.language.INTRO_NO + '" class="button2" /></fieldset></form>';
+						phpbb.confirm(errorMaxLimitContent, function(confirm) {
+							if (confirm) {
+								updateSubscriptionOnServer(subscription, 'unsuball');
+							}
+						});
+					} else {
+						phpbb.alert(pushNotifications.language.INFORMATION, pushNotifications.language.UPDATE_FAILED);
+					}
 					return;
-				} else if (unsubscribe) {
+				} else if (subFlg == 'unsub') {
 					return;
 				}
 				localStorage.pushSubscription = JSON.stringify({
@@ -110,7 +127,7 @@
 			userVisibleOnly: true,
 			applicationServerKey: applicationServerKey
 		}).then(function(subscription) {
-			updateSubscriptionOnServer(subscription);
+			updateSubscriptionOnServer(subscription, 'sub');
 			isSubscribed = true;
 			updateBtn();
 		}).catch(function() {
@@ -125,7 +142,7 @@
 			isSubscribed = false;
 			updateBtn();
 			if (subscription) {
-				updateSubscriptionOnServer(subscription, true);
+				updateSubscriptionOnServer(subscription, 'unsub');
 				return subscription.unsubscribe();
 			}
 		});

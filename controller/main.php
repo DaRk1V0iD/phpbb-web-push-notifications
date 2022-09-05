@@ -57,7 +57,7 @@ class main
 	 */
 	public function subscribe()
 	{
-		if (!$this->request->is_ajax())
+		if (!$this->request->is_ajax() || $this->user->data['user_id'] == ANONYMOUS)
 		{
 			redirect(append_sid("{$this->phpbb_root_path}index.{$this->php_ext}"));
 		}
@@ -66,7 +66,7 @@ class main
 		{
 			return new JsonResponse([
 				'status' => 'error',
-				'error'  => $this->user->lang('BROWSER_NOTIFICATIONS_MAX_LIMIT_REACHED', $this->config['push_max_browsers']),
+				'error_max_limit'  => $this->user->lang('BROWSER_NOTIFICATIONS_MAX_LIMIT_REACHED', $this->config['push_max_browsers']),
 			]);
 		}
 
@@ -95,7 +95,7 @@ class main
 	 */
 	public function unsubscribe()
 	{
-		if (!$this->request->is_ajax())
+		if (!$this->request->is_ajax() || $this->user->data['user_id'] == ANONYMOUS)
 		{
 			redirect(append_sid("{$this->phpbb_root_path}index.{$this->php_ext}"));
 		}
@@ -107,6 +107,26 @@ class main
 			->set_endpoint($endpoint)
 			->set_keys($keys)
 			->remove();
+
+		return new JsonResponse([
+			'status' => 'success',
+		]);
+	}
+
+	/**
+	 * Removes current user's all subscription(s) from board's database
+	 *
+	 * @return JsonResponse
+	 */
+	public function unsubscribe_all()
+	{
+		if (!$this->request->is_ajax() || $this->user->data['user_id'] == ANONYMOUS)
+		{
+			redirect(append_sid("{$this->phpbb_root_path}index.{$this->php_ext}"));
+		}
+
+		$sql = 'DELETE FROM ' . $this->subscriptions_table . ' WHERE user_id = ' . (int) $this->user->data['user_id'];
+		$this->db->sql_query($sql);
 
 		return new JsonResponse([
 			'status' => 'success',
