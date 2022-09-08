@@ -86,14 +86,14 @@
 			data: JSON.parse(JSON.stringify(subscription)),
 			method: 'POST',
 			error: function() {
-				if (subFlg != 'unsub') { // Unsubscribe in case of an error during subscription.
+				if (subFlg == 'sub') { // Unsubscribe in case of an error during subscription.
 					unsubscribeUser();
 					phpbb.alert(pushNotifications.language.INFORMATION, pushNotifications.language.UPDATE_FAILED);
 				}
 				// Do not show an error for failed unsubscription - it will be handled on the server side.
 			},
 			success: function(res) {
-				if (!res.id && subFlg != 'unsub') { // Unsubscribe in case of an error during subscription.
+				if (!res.id && subFlg == 'sub') { // Unsubscribe in case of an error during subscription.
 					unsubscribeUser();
 					if (res.error) {
 						phpbb.alert(pushNotifications.language.INFORMATION, res.error);
@@ -107,6 +107,9 @@
 					} else {
 						phpbb.alert(pushNotifications.language.INFORMATION, pushNotifications.language.UPDATE_FAILED);
 					}
+					return;
+				} else if (subFlg == 'unsuball') {
+					subscribeUser();
 					return;
 				} else if (subFlg == 'unsub') {
 					return;
