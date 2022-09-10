@@ -49,7 +49,6 @@ self.addEventListener('notificationclick', function(event) {
 
 self.addEventListener('push', function(event) {
 	const data = event.data.json();
-	const title = data.title;
 	const options = {
 		body: data.message,
 		data: {url: data.url},
@@ -57,10 +56,10 @@ self.addEventListener('push', function(event) {
 		badge: data.badge,
 		vibrate: [300, 100, 400],
 		timestamp: data.time,
-		requireInteraction: true
+		requireInteraction: data.dismiss
 	};
 
-	event.waitUntil(self.registration.showNotification(title, options));
+	event.waitUntil(self.registration.showNotification(data.title, options));
 });
 
 self.addEventListener('pushsubscriptionchange', function(event) {
@@ -68,37 +67,37 @@ self.addEventListener('pushsubscriptionchange', function(event) {
 		return;
 	}
 	var pushSubscription = JSON.parse(localStorage.pushSubscription);
-    const applicationServerKey = urlB64ToUint8Array(pushSubscription.serverKey);
-    event.waitUntil(
-        self.registration.pushManager.subscribe({
-            userVisibleOnly: true,
-            applicationServerKey: applicationServerKey
-        }).then(function(newSubscription) {
-	        var subscriptionArray = JSON.parse(JSON.stringify(newSubscription)),
-		        subscriptionString = 'endpoint=' + subscriptionArray.endpoint + '&keys[p256dh]=' + subscriptionArray.keys.p256dh + '&keys[auth]=' + subscriptionArray.keys.auth + '&subscription_id=' + pushSubscription.subscriptionID;
+	const applicationServerKey = urlB64ToUint8Array(pushSubscription.serverKey);
+	event.waitUntil(
+		self.registration.pushManager.subscribe({
+			userVisibleOnly: true,
+			applicationServerKey: applicationServerKey
+		}).then(function(newSubscription) {
+			var subscriptionArray = JSON.parse(JSON.stringify(newSubscription)),
+				subscriptionString = 'endpoint=' + subscriptionArray.endpoint + '&keys[p256dh]=' + subscriptionArray.keys.p256dh + '&keys[auth]=' + subscriptionArray.keys.auth + '&subscription_id=' + pushSubscription.subscriptionID;
 
-	        var fetchOptions = {
-		        method: 'post',
-		        headers: new Headers({
-			        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-			        'X-Requested-With': 'XMLHttpRequest'
-		        }),
-		        credentials: 'include',
-		        body: subscriptionString
-	        };
-	        return fetch(pushSubscription.serverURL + 'subscribe', fetchOptions);
-        }).then(function(response) {
-	        return response.json();
-        }).then(function(res) {
-	        if (!res.id) {
-		        return;
-	        }
-	        localStorage.pushSubscription = JSON.stringify({
-		        serverKey: pushSubscription.serverKey,
-		        serverURL: pushSubscription.serverURL,
-		        subscriptionID: res.id
-	        });
-        })
-    );
+			var fetchOptions = {
+				method: 'post',
+				headers: new Headers({
+					'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+					'X-Requested-With': 'XMLHttpRequest'
+				}),
+				credentials: 'include',
+				body: subscriptionString
+			};
+			return fetch(pushSubscription.serverURL + 'subscribe', fetchOptions);
+		}).then(function(response) {
+			return response.json();
+		}).then(function(res) {
+			if (!res.id) {
+				return;
+			}
+			localStorage.pushSubscription = JSON.stringify({
+				serverKey: pushSubscription.serverKey,
+				serverURL: pushSubscription.serverURL,
+				subscriptionID: res.id
+			});
+		})
+	);
 });
 

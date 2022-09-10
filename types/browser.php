@@ -125,12 +125,13 @@ class browser extends \phpbb\notification\method\base
 			$message = html_entity_decode(truncate_string(strip_tags($display_data['FORMATTED_TITLE'] . ' ' . $display_data['REFERENCE'] . $display_data['FORUM'] . $display_data['REASON']), 1000, 1000), ENT_COMPAT);
 
 			$this->prepare_push_notifications($WebPush, $notification->user_id, [
-				'title'   => $this->config['sitename'],
-				'message' => $message,
-				'url'     => $this->make_clean_url(str_replace('&amp;', '&', $display_data['URL'])),
-				'time'    => $notification->notification_time,
-				'badge'   => $this->config['push_badge_url'],
-				'avatar'  => $this->get_avatar_url($notification->get_avatar()),
+				'title'		=> $this->config['sitename'],
+				'message'	=> $message,
+				'url'		=> $this->make_clean_url(str_replace('&amp;', '&', $display_data['URL'])),
+				'time'		=> $notification->notification_time * 1000,
+				'badge'		=> $this->config['push_badge_url'],
+				'avatar'	=> $this->get_avatar_url($notification->get_avatar()),
+				'dismiss'	=> false,
 			]);
 		}
 
